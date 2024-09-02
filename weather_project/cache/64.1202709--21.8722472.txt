@@ -1,0 +1,1 @@
+{"temperature": 9.39}

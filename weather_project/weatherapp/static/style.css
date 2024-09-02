@@ -1,0 +1,61 @@
+.init-header{
+    font-size: 36px; 
+    text-align: left; 
+    padding-top: 50px;
+    padding-left: 200px;
+    background-image: url('bg.jpg');
+    background-size: cover;
+    background-position: center; 
+    background-repeat: no-repeat; 
+    height: 300px;
+}
+
+.main-content-bg{
+    background-color: grey;
+    height:300px;
+   
+
+}
+
+.content{
+    padding-top: 2%;
+}
+.header-text{
+
+    width: 40%;
+}
+.caption{
+    color: white;
+}
+body{
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+
+----------------------------
+
+
+.weather-result h4 {
+    margin: 0 0 10px;
+    color: #333;
+    font-size: 26px;
+    font-weight: 600;
+}
+
+.weather-result p {
+    font-size: 22px;
+    margin: 5px 0 0;
+    color: #555;
+}
+
+.weather-result .temperature {
+    font-size: 28px;
+    font-weight: bold;
+    color: rgb(58, 189, 58);
+}
+
+.weather-result .city-name {
+    font-size: 24px;
+    color: #11abd1;
+    margin-bottom: 10px;
+}

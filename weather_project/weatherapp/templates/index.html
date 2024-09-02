@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="init-header text-center">
+    <div class='header-text'>
+        <h1 style="color: #eb6e4b;">TheWeatherApp</h1>
+        <h4 class="caption">Weather forecasts, nowcasts, and history in a fast and elegant way</h4>
+    </div>
+</div>
+
+<div class='main-content-bg'>
+  <div class='content text-center' style="margin-bottom: 80px;"> <!-- Added margin-bottom -->
+      <form class="form-inline justify-content-center" id="weather_form">
+          {% csrf_token %}
+          <div class="form-group mx-sm-3 mb-2 position-relative">
+              <label for="weather_search" class="sr-only">Weather</label>
+              <input type="text" class="form-control" id="weather_search" placeholder="Search weather using city name" style='width: 100%; max-width: 600px;'>
+              <ul id="suggestions" class="dropdown-menu" style="display: none;"></ul>
+          </div>
+          <button type="submit" class="btn btn-primary mb-2">Search</button>
+      </form>
+
+      <div id="loader" style="display: none;">
+          <p>Loading...</p>
+      </div>
+      
+      <div id="weather_result" class="weather-result" style="display: none;margin-top: 20px;padding: 20px;border-radius: 10px;
+    background-color: #ffffff;
+    border: 2px solid #dcdcdc;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    display: inline-block;
+    max-width: 300px; 
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+   
+  ">
+          <div class="city-name" id="city_name"></div>
+          <p class="temperature"><span id="temperature"></span>°C</p>
+      </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block javascript_below %}
+<script>
+let selectedLat = null;
+let selectedLon = null;
+let selectedCity = null;
+
+document.getElementById("weather_form").addEventListener("submit", function(event) {
+    event.preventDefault();
+    
+    // Check if lat and lon are selected
+    if (selectedLat === null || selectedLon === null) {
+        alert("Please select a city from the suggestions.");
+        return;
+    }
+
+    // Submit only lat and lon
+    fetch("/weather", { // Replace with your internal Django endpoint
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: JSON.stringify({
+            lat: selectedLat,
+            lon: selectedLon
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error("Network response was not ok");
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.temperature !== undefined && selectedCity) {
+            document.getElementById("city_name").textContent = selectedCity;
+            document.getElementById("temperature").textContent = data.temperature.toFixed(2);
+            document.getElementById("weather_result").style.display = 'block';
+        } else {
+            console.error("Temperature data is not available");
+        }
+    })
+    .catch(error => {
+        console.error("There was a problem with the fetch operation:", error);
+    });
+});
+
+document.getElementById("weather_search").addEventListener("input", function() {
+    var input = this.value.trim();
+    if (input.length >= 3) {
+        geoapi(true);
+    } else {
+        clearSuggestions();
+    }
+});
+
+function geoapi(isSuggestion) {
+    var city_name = document.getElementById("weather_search").value.trim();
+    
+    if (!city_name) {
+        if (!isSuggestion) {
+            alert("Please enter a city name.");
+        }
+        return;
+    }
+
+    if (!isSuggestion) {
+        showLoader(true);
+    }
+
+    var requestData = { city_name: city_name };
+
+    fetch("/geoapi", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: JSON.stringify(requestData)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error("Network response was not ok");
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (isSuggestion) {
+            populateSuggestions(data);
+        } else {
+            console.log(data); 
+        }
+    })
+    .catch(error => {
+        console.error("There was a problem with the fetch operation:", error);
+    })
+    .finally(() => {
+        if (!isSuggestion) {
+            setTimeout(() => showLoader(false), 3000); 
+        }
+    });
+}
+
+function showLoader(show) {
+    document.getElementById("loader").style.display = show ? "block" : "none";
+}
+
+function populateSuggestions(suggestions) {
+  const dropdown = document.getElementById("suggestions");
+  dropdown.innerHTML = ''; 
+
+  suggestions.forEach(item => {
+      const listItem = document.createElement("li");  
+      listItem.className = "dropdown-item";
+      listItem.textContent = `${item.name}, ${item.country}`;  
+      listItem.addEventListener("click", function() {
+          document.getElementById("weather_search").value = item.name;  
+          selectedLat = item.lat;  // Store the selected latitude
+          selectedLon = item.lon;  // Store the selected longitude
+          selectedCity = `${item.name}, ${item.country}`;  // Store the selected city name
+          clearSuggestions();  
+      });
+      dropdown.appendChild(listItem);  
+  });
+
+  dropdown.style.display = suggestions.length > 0 ? 'block' : 'none';  
+}
+
+function clearSuggestions() {
+    const dropdown = document.getElementById("suggestions");
+    dropdown.innerHTML = '';
+    dropdown.style.display = 'none'; 
+}
+</script>
+{% endblock %}
