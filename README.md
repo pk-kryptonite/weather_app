@@ -66,7 +66,7 @@ TheWeatherApp is a web application that provides weather forecasts using the Ope
 
 5. **Update Django settings:**
 
-    Edit `your_project/settings.py` to configure the MariaDB database:
+    Edit `weather_project/settings.py` to configure the MariaDB database:
 
     ```python
     DATABASES = {
